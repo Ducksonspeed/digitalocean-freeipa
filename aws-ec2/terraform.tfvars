@@ -1,0 +1,6 @@
+publickeys = "~/.ssh/"
+privatekeys = "~/.ssh/"
+user = "ubuntu"
+aws_secret = ""
+profile = ""
+instance_type = "t3a.small"

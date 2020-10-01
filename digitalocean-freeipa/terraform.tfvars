@@ -1,0 +1,9 @@
+# DigitalOcean vars
+region = "lon1"
+instance = "s-1vcpu-2gb"
+image = "centos-7-x64"
+keyname = "leaseweb"
+domain_name = "ipa.alexhayward.me"
+private_key_path = "~/.ssh/leaseweb"
+username = "root"
+credentials = "secrets/credentials.env"

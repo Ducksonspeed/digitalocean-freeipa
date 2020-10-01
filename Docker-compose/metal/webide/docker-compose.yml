@@ -1,0 +1,24 @@
+version: '3.3'
+services:
+
+  webide:
+   container_name: theia
+   restart: unless-stopped
+   image: theiaide/theia-full:latest
+   network_mode: mynetwork
+   volumes:
+   - THEIA:/home/projects
+   user: ${CURRENT_UID}
+   hostname: ide
+   labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.ide.rule=Host(`ide.alexhayward.me`)"
+    - "traefik.http.routers.ide.tls=true"
+    - "traefik.http.routers.ide.entrypoints=websecure"
+    - "traefik.http.services.ide.loadbalancer.server.port=3000"
+    - "traefik.http.routers.ide.middlewares=auth"
+    - "traefik.http.middlewares.auth.basicauth.users=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+volumes:
+ THEIA:
+  external: true

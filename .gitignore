@@ -1,0 +1,10 @@
+secrets/
+.inventory
+ans-var.yml
+.terraform.tfstate.*
+terraform.tfstate.*
+terraform.tfstate
+.terraform/
+.DS_store
+inventory
+

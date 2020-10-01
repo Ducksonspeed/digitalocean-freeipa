@@ -1,0 +1,62 @@
+version: '3.6' 
+secrets:
+    gce_service_account:
+        file: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+services: 
+ traefik: 
+  container_name: 'traefik' 
+  image: traefik:2.2
+  restart: always 
+  networks:
+    - mynetwork
+  security_opt: 
+   - no-new-privileges:true 
+  secrets: 
+   - gce_service_account  
+  environment: 
+   - GCE_SERVICE_ACCOUNT_FILE=/run/secrets/gce_service_account
+  command: 
+   - '--log.level=DEBUG' 
+   - '--entrypoints.web.address=:80' 
+   - '--entrypoints.websecure.address=:443'
+   - '--providers.docker=true' 
+   - '--api.insecure=false' 
+   - '--api.dashboard=true'  
+   - '--providers.docker.exposedbydefault=false'
+   - '--providers.docker.network=mynetwork'
+   - '--certificatesresolvers.google.acme.email=alex@alexhayward.me' 
+   - '--certificatesresolvers.google.acme.dnschallenge=true' 
+   - '--certificatesresolvers.google.acme.dnschallenge.provider=gcloud'  
+   - '--certificatesresolvers.google.acme.storage=/acme.json'
+  ports: 
+   - "80:80" 
+   - "443:443" 
+  volumes: 
+   - '/var/run/docker.sock:/var/run/docker.sock:ro' 
+   - '/home/alex/configs/traefik/letsencrypt/acme.json:/acme.json' 
+  labels: # global redirect to https 
+   - 'traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)' 
+   - 'traefik.http.routers.http-catchall.entrypoints=web' 
+   - 'traefik.http.routers.http-catchall.middlewares=redirect-to-https' 
+   - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+
+  # global wildcard certificates
+   - 'traefik.http.routers.wildcard-certs.tls.certresolver=google'
+   - 'traefik.http.routers.wildcard-certs.tls.domains[0].main=alexhayward.me'
+   - 'traefik.http.routers.wildcard-certs.tls.domains[0].sans=*.alexhayward.me'
+   - 'traefik.http.routers.wildcard-certs.tls.domains[1].main=alexhayward.me'
+   - 'traefik.http.routers.wildcard-certs.tls.domains[1].sans=*.alexhayward.me'
+
+  # dashboard
+   - 'traefik.enable=true' 
+   - 'traefik.http.routers.traefik.rule=Host(`monitor.alexhayward.me`)'
+   - 'traefik.http.routers.traefik.tls=true'
+   - 'traefik.http.routers.traefik.entrypoints=websecure'
+   - 'traefik.http.routers.traefik.service=api@internal'
+   - "traefik.http.routers.traefik.middlewares=auth"
+   - "traefik.http.middlewares.auth.basicauth.users=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+networks:
+    mynetwork:
+      external: true

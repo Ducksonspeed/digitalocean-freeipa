@@ -1,0 +1,88 @@
+- hosts: all
+  become: true
+  vars_files:
+    - vars/vars.env
+
+  tasks:
+    - name: Install aptitude using apt
+      apt: 
+        name: aptitude 
+        state: latest 
+        update_cache: yes 
+        force_apt_get: yes
+
+    - name: Install required system packages
+      apt: 
+        name: {{ item }} 
+        state: latest 
+        update_cache: yes
+      loop: [ 'apt-transport-https', 'ca-certificates', 'python3', 'python3-dev', 'curl', 'software-properties-common', 'python3-pip', 'python3-virtualenv', 'python3-dev', 'python3-setuptools']
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt: 
+        update_cache: yes
+        name=: docker-ce 
+        state: latest
+
+    - name: Install Docker Module for Python
+      pip:
+        name: 
+          - docker
+          - docker-compose
+
+    - name: Make sure we have a 'wheel' group
+      group:
+        name: wheel
+        state: present
+
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create '{{ user }}' and apply sudo privileges
+      user:
+        name: "{{ user }}"
+        state: present
+        groups: [wheel, docker]
+        append: true
+        create_home: true
+        shell: /bin/bash
+
+    - name: Set authorized key for remote user '{{ user }}'
+      authorized_key:
+        user: "{{ user }}"
+        state: present
+        key: "{{ copy_local_key }}"
+
+    - name: Disable password authentication for root
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin prohibit-password'
+
+    
+    - name: Create and start services
+      community.general.docker_compose:
+          project_src: docker/docker-compose.yml
+          state: present
+    
+
+        
+
+
+        

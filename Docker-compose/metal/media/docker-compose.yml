@@ -1,0 +1,644 @@
+version: '3.3'
+services:    
+
+ portainer:
+  container_name: portainer
+  restart: unless-stopped
+  volumes:
+   - '/var/run/docker.sock:/var/run/docker.sock'
+   - '/configs/portainer:/data'
+  network_mode: mynetwork
+  hostname: portainer
+  image: portainer/portainer:latest
+  labels:
+   - "traefik.enable=true"
+   - "traefik.http.routers.portainer.rule=Host(`admin.alexhayward.me`)"
+   - "traefik.http.routers.portainer.tls=true"
+   - "traefik.http.routers.portainer.entrypoints=websecure"
+   - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+   
+ 
+ plex:
+  container_name: plex
+  volumes:
+   - '/configs/plex:/config'
+   - '/mergerfs:/media'
+  ports:
+   - '32400:32400'
+  environment:
+   - PLEX_UID=
+   - PLEX_GID=
+   - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+   - CHANGE_CONFIG_DIR_OWNERSHIP=true
+   - 'HOME=/config'
+   - PLEX_CLAIM=
+   - TZ=Europe/London
+  devices:
+   - '/dev/dri/card0:/dev/dri/card0'
+   - '/dev/dri/renderD128:/dev/dri/renderD128'
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: plex
+  image: plexinc/pms-docker:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.plex.rule=Host(`plex.alexhayward.me`)"
+    - "traefik.http.routers.plex.tls=true"
+    - "traefik.http.routers.plex.entrypoints=websecure"
+    - "traefik.http.services.plex.loadbalancer.server.port=32400"
+  
+ nzbget:
+  container_name: nzbget
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=Europe/London
+  volumes:
+   - '/config:/config'
+   - '/temp:/temp'
+   - '/downloads:/downloads'
+   - '/nzb:/nzb'
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: nzbget
+  image: linuxserver/nzbget:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.nzbget.rule=Host(`get.alexhayward.me`)"
+    - "traefik.http.routers.nzbget.tls=true"
+    - "traefik.http.routers.nzbget.entrypoints=websecure"
+    - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
+
+ radarr:
+  container_name: radarr
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=Europe/London
+   - UMASK_SET=022 
+   - 'HOME=/config'
+   - 'XDG_CONFIG_HOME=/config/xdg'
+   - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  volumes:
+   - '/configs/radarr:/config'
+   - '/mergerfs/Movies:/Movies'
+   - '/films:/downloads'
+  network_mode: mynetwork
+  restart: unless-stopped
+  hostname: radarr
+  image: linuxserver/radarr:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.radarr.rule=Host(`radarr.alexhayward.me`)"
+    - "traefik.http.routers.radarr.tls=true"
+    - "traefik.http.routers.radarr.entrypoints=websecure"
+    - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+  
+ sonarr:
+  container_name: sonarr
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=Europe/London
+   - UMASK_SET=022 
+   - 'HOME=/config'
+   - 'XDG_CONFIG_HOME=/config/xdg'
+   - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+  volumes:
+   - '/configs/sonarr:/config'
+   - '/mergerfs/TV Shows:/tv'
+   - '/data/downloads/tv:/downloads'
+  network_mode: mynetwork
+  hostname: sonarr
+  restart: unless-stopped
+  image: linuxserver/sonarr:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.sonarr.rule=Host(`sonarr.alexhayward.me`)"
+    - "traefik.http.routers.sonarr.tls=true"
+    - "traefik.http.routers.sonarr.entrypoints=websecure"
+    - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+  
+ delugefilm:
+  container_name: delugefilm
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=timezone
+   - UMASK_SET=022 
+   - DELUGE_LOGLEVEL=info
+   - 'PYTHON_EGG_CACHE=/config/plugins/.python-eggs'
+  volumes:
+   - '/home/alex/data/downloads/films/tor:/downloads:rw'
+  ports:
+   - '65000-65005:65000-65005'
+   - '65000-65005:65000-65005/udp'
+  restart: unless-stopped
+  hostname: delugefilm
+  network_mode: mynetwork
+  image: linuxserver/deluge:2.0.3-2201906121747ubuntu18.04.1-ls72
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.delugefilm.rule=Host(`delugefilm.alexhayward.me`)"
+    - "traefik.http.routers.delugefilm.tls=true"
+    - "traefik.http.routers.delugefilm.entrypoints=websecure"
+    - "traefik.http.services.delugefilm.loadbalancer.server.port=8081"
+    - "traefik.http.routers.delugefilm.middlewares=auth"
+    - "traefik.http.middlewares.auth.basicauth.users=dishcleaner:$$apr1$$wUdPcM77$$qvBsxsnm7wpbXbMT3zgy7/"
+
+ delugeTV:
+  container_name: delugeTV
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=timezone
+   - UMASK_SET=022 
+   - DELUGE_LOGLEVEL=info
+   - 'PYTHON_EGG_CACHE=/config/plugins/.python-eggs'
+  volumes:
+   - '/configs/delugeTV:/config:rw'
+   - '/data/downloads/tv/tor:/downloads:rw'
+   - /delugeTV/tor:/torrents:rw'
+  ports:
+   - '65010-65015:65010-65015'
+   - '65010-65015:65010-65015/udp'
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: delugetv
+  image: linuxserver/deluge:2.0.3-2201906121747ubuntu18.04.1-ls72
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.delugetv.rule=Host(`delugetv.alexhayward.me`)"
+    - "traefik.http.routers.delugetv.tls=true"
+    - "traefik.http.routers.delugetv.entrypoints=websecure"
+    - "traefik.http.services.delugetv.loadbalancer.server.port=8082"
+    - "traefik.http.routers.delugetv.middlewares=auth"
+    - "traefik.http.middlewares.auth.basicauth.users=dishcleaner:$$apr1$$wUdPcM77$$qvBsxsnm7wpbXbMT3zgy7/"
+   
+ jackett:
+  container_name: jackett
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=Europe/London
+  volumes:
+   - '/configs:/config'
+  network_mode: mynetwork
+  hostname: jackett
+  restart: unless-stopped
+  image: linuxserver/jackett:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.jackett.rule=Host(`jackett.alexhayward.me`)"
+    - "traefik.http.routers.jackett.tls=true"
+    - "traefik.http.routers.jackett.entrypoints=websecure"
+    - "traefik.http.services.jackett.loadbalancer.server.port=9117"
+   
+ ombi:
+  container_name: ombi
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=Europe/London
+   - 'HOME=/config'
+  volumes:
+   - '/configs/ombi:/config'
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: ombi
+  image: linuxserver/ombi:v4-preview
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.ombi.rule=Host(`request.alexhayward.me`)"
+    - "traefik.http.routers.ombi.tls=true"
+    - "traefik.http.routers.ombi.entrypoints=websecure"
+    - "traefik.http.services.ombi.loadbalancer.server.port=3579"
+  
+ tautulli:
+  container_name: tautulli
+  environment:
+   - PUID=
+   - PGID=
+   - TZ=Europe/London
+  volumes:
+   - '/configs/tautulli:/config'
+   - '/configs/plex:/logs'
+  network_mode: mynetwork
+  hostname: tautulli
+  restart: unless-stopped
+  image: linuxserver/tautulli:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.tautulli.rule=Host(`info.alexhayward.me`)"
+    - "traefik.http.routers.tautulli.tls=true"
+    - "traefik.http.routers.tautulli.entrypoints=websecure"
+    - "traefik.http.services.tautulli.loadbalancer.server.port=8181" 
+ 
+#  wowza:
+#   container_name: wowza
+#   restart: "no"
+#   expose:
+#    - 1935/tcp
+#    - 444/tcp
+#    - 444/udp
+#    - 8086/tcp
+#    - 8087/tcp
+#    - 8088/tcp
+#   ports:
+#    - '1935:1935'
+#    - '8086:8086'
+#    - '8087:8087'
+#    - '8088:8088'
+#    - '444:444/udp'
+#    - '444:444'
+#   entrypoint:
+#    - /sbin/entrypoint.sh
+#   depends_on: 
+#    - "letsencrypt"
+#   devices:
+#    - '/dev/dri/card0:/dev/dri/card0'
+#    - '/dev/dri/renderD128:/dev/dri/renderD128'
+#   network_mode: mynetwork
+#   hostname: wowza
+#   environment:
+#   - WSE_MGR_USER=xxxxxxxx
+#   - WSE_MGR_PASS=xxxxxxxx
+#   image: wowzamedia/wowza-streaming-engine-linux
+     
+
+ synclounge:
+  container_name: synclounge
+  environment:
+   - TZ=Europe/London
+   - DOMAIN=sync.alexhayward.me
+  network_mode: mynetwork
+  hostname: sync
+  restart: unless-stopped
+  image: starbix/synclounge
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.tautulli.tls=true"
+    - "traefik.http.routers.tautulli.entrypoints=websecure"
+    - "traefik.http.services.tautulli.loadbalancer.server.port=8181" 
+
+#  letsencrypt:
+#   image: linuxserver/letsencrypt:latest
+#   container_name: letsencrypt
+#   cap_add:
+#    - NET_ADMIN
+#   network_mode: mynetwork
+#   hostname: nginx
+#   environment:
+#    - PUID=
+#    - PGID=
+#    - TZ=Europe/London
+#    - URL=
+#    - SUBDOMAINS=
+#    - VALIDATION=
+#    - DNSPLUGIN= 
+#    - EMAILe
+#    - DHLEVEL= 
+#    - ONLY_SUBDOMAINS=false
+#    - STAGING=false
+#   volumes:
+#    - /configs/nginx:/config
+#   ports:
+#    - '443:443'
+#    - '80:80'
+#   restart: unless-stopped
+
+ nginx:
+    image: nginx:latest
+    container_name: nginx
+    network_mode: mynetwork
+    hostname: nginx
+    restart: unless-stopped
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.nginx.rule=Host(`alexhayward.me`)"
+        - "traefik.http.routers.nginx.tls=true"
+        - "traefik.http.routers.nginx.entrypoints=websecure"
+        - "traefik.http.services.nginx.loadbalancer.server.port=80"
+
+ netdata:
+  container_name: netdata
+  network_mode: mynetwork
+  hostname: netdata
+  cap_add:
+   - 
+  security_opt:
+   - 
+  volumes:
+   - /proc:/host/proc:ro
+   - /sys:/host/sys:ro
+   - /var/run/docker.sock:/var/run/docker.sock:ro
+  restart: unless-stopped
+  image: netdata/netdata
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.netdata.rule=Host(`netdata.alexhayward.me`)"
+    - "traefik.http.routers.netdata.tls=true"
+    - "traefik.http.routers.netdata.entrypoints=websecure"
+    - "traefik.http.services.netdata.loadbalancer.server.port=19999"
+    - "traefik.http.routers.netdata.middlewares=auth"
+    - "traefik.http.middlewares.auth.basicauth.users=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+ bitwarden:
+  container_name: bitwarden
+  network_mode: mynetwork
+  hostname: bitwarden
+  restart: unless-stopped
+  image: dishcleaner/web:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.bitwarden.rule=Host(`pass.alexhayward.me`)"
+    - "traefik.http.routers.bitwarden.tls=true"
+    - "traefik.http.routers.bitwarden.entrypoints=websecure"
+    - "traefik.http.services.bitwarden.loadbalancer.server.port=5000"
+
+ vpn:
+  container_name: openvpn
+  network_mode: mynetwork
+  hostname: vpn
+  ports:
+   - '1194:1194/udp'
+  cap_add:
+   - NET_ADMIN
+  volumes:
+   - OPENVPN:/etc/openvpn
+  restart: unless-stopped
+  image: kylemanna/openvpn
+  
+
+#  nextcloud:
+#   container_name: nextcloud
+#   environment:
+#    - PUID=
+#    - PGID=
+#    - TZ=Europe/London
+#    - UMASK=022
+#   volumes:
+#    - /data/Stroage:/data
+#    - /configs/nextcloud:/config
+#   restart: unless-stopped
+#   network_mode: mynetwork
+#   hostname: nextcloud
+#   image: linuxserver/nextcloud:latest
+
+ influxdb:
+  container_name: influxdb
+  volumes:
+   - /configs/influxdb/data:/var/lib/influxdb
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: influxdb
+  image: influxdb:latest   
+
+ telegraf:
+  container_name: telegraf
+  environment:
+   - HOST_PROC=/host/proc
+  volumes:
+   - /proc:/host/proc:ro
+   - /home/alex/configs/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+   - /var/run/docker.sock:/var/run/docker.sock
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: telegraf
+  image: telegraf:latest
+
+ grafana:
+  container_name: grafana
+  environment:
+   - GF_INSTALL_PLUGINS=grafana-worldmap-panel,raintank-worldping-app,alexanderzobnin-zabbix-app,grafana-piechart-panel,percona-percona-app
+  volumes:
+   - GRAFANA-STORAGE:/var/lib/grafana
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: grafana
+  image: grafana/grafana:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.grafana.rule=Host(`grafana.alexhayward.me`)"
+    - "traefik.http.routers.grafana.tls=true"
+    - "traefik.http.routers.grafana.entrypoints=websecure"
+    - "traefik.http.services.grafana.loadbalancer.server.port=3000" 
+
+ varken:
+  container_name: Varken
+  environment:
+      - VRKN_GLOBAL_SONARR_SERVER_IDS=1
+      - VRKN_GLOBAL_RADARR_SERVER_IDS=1
+      - VRKN_GLOBAL_LIDARR_SERVER_IDS=false
+      - VRKN_GLOBAL_TAUTULLI_SERVER_IDS=1
+      - VRKN_GLOBAL_OMBI_SERVER_IDS=1
+      - VRKN_GLOBAL_SICKCHILL_SERVER_IDS=false
+      - VRKN_GLOBAL_UNIFI_SERVER_IDS=false
+      - VRKN_GLOBAL_MAXMIND_LICENSE_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_INFLUXDB_URL=influxdb
+      - VRKN_INFLUXDB_PORT=8086
+      - VRKN_INFLUXDB_SSL=false
+      - VRKN_INFLUXDB_VERIFY_SSL=false
+      - VRKN_INFLUXDB_USERNAME=xxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_INFLUXDB_PASSWORD=xxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_TAUTULLI_1_URL=tautulli:8181
+      - VRKN_TAUTULLI_1_FALLBACK_IP=1.1.1.1
+      - VRKN_TAUTULLI_1_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_TAUTULLI_1_SSL=false
+      - VRKN_TAUTULLI_1_VERIFY_SSL=false
+      - VRKN_TAUTULLI_1_GET_ACTIVITY=true
+      - VRKN_TAUTULLI_1_GET_ACTIVITY_RUN_SECONDS=30
+      - VRKN_TAUTULLI_1_GET_STATS=true
+      - VRKN_TAUTULLI_1_GET_STATS_RUN_SECONDS=3600
+      - VRKN_SONARR_1_URL=sonarr:8989
+      - VRKN_SONARR_1_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_SONARR_1_SSL=false
+      - VRKN_SONARR_1_VERIFY_SSL=false
+      - VRKN_SONARR_1_MISSING_DAYS=7
+      - VRKN_SONARR_1_MISSING_DAYS_RUN_SECONDS=300
+      - VRKN_SONARR_1_FUTURE_DAYS=1
+      - VRKN_SONARR_1_FUTURE_DAYS_RUN_SECONDS=300
+      - VRKN_SONARR_1_QUEUE=true
+      - VRKN_SONARR_1_QUEUE_RUN_SECONDS=300
+      - VRKN_SONARR_2_URL=sonarr2.domain.tld:8989
+      - VRKN_SONARR_2_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_SONARR_2_SSL=false
+      - VRKN_SONARR_2_VERIFY_SSL=false
+      - VRKN_SONARR_2_MISSING_DAYS=7
+      - VRKN_SONARR_2_MISSING_DAYS_RUN_SECONDS=300
+      - VRKN_SONARR_2_FUTURE_DAYS=1
+      - VRKN_SONARR_2_FUTURE_DAYS_RUN_SECONDS=300
+      - VRKN_SONARR_2_QUEUE=true
+      - VRKN_SONARR_2_QUEUE_RUN_SECONDS=300
+      - VRKN_RADARR_1_URL=radarr:7878
+      - VRKN_RADARR_1_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_RADARR_1_SSL=false
+      - VRKN_RADARR_1_VERIFY_SSL=false
+      - VRKN_RADARR_1_QUEUE=true
+      - VRKN_RADARR_1_QUEUE_RUN_SECONDS=300
+      - VRKN_RADARR_1_GET_MISSING=true
+      - VRKN_RADARR_1_GET_MISSING_RUN_SECONDS=300
+      - VRKN_RADARR_2_URL=radarr2.domain.tld
+      - VRKN_RADARR_2_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_RADARR_2_SSL=false
+      - VRKN_RADARR_2_VERIFY_SSL=false
+      - VRKN_RADARR_2_QUEUE=true
+      - VRKN_RADARR_2_QUEUE_RUN_SECONDS=300
+      - VRKN_RADARR_2_GET_MISSING=true
+      - VRKN_RADARR_2_GET_MISSING_RUN_SECONDS=300
+      - VRKN_LIDARR_1_URL=lidarr1.domain.tld:8686
+      - VRKN_LIDARR_1_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_LIDARR_1_SSL=false
+      - VRKN_LIDARR_1_VERIFY_SSL=false
+      - VRKN_LIDARR_1_MISSING_DAYS=30
+      - VRKN_LIDARR_1_MISSING_DAYS_RUN_SECONDS=300
+      - VRKN_LIDARR_1_FUTURE_DAYS=30
+      - VRKN_LIDARR_1_FUTURE_DAYS_RUN_SECONDS=300
+      - VRKN_LIDARR_1_QUEUE=true
+      - VRKN_LIDARR_1_QUEUE_RUN_SECONDS=300
+      - VRKN_OMBI_1_URL=ombi:3579
+      - VRKN_OMBI_1_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_OMBI_1_SSL=false
+      - VRKN_OMBI_1_VERIFY_SSL=false
+      - VRKN_OMBI_1_GET_REQUEST_TYPE_COUNTS=true
+      - VRKN_OMBI_1_REQUEST_TYPE_RUN_SECONDS=300
+      - VRKN_OMBI_1_GET_REQUEST_TOTAL_COUNTS=true
+      - VRKN_OMBI_1_REQUEST_TOTAL_RUN_SECONDS=300
+      - VRKN_OMBI_1_GET_ISSUE_STATUS_COUNTS=true
+      - VRKN_OMBI_1_ISSUE_STATUS_RUN_SECONDS=300
+      - VRKN_SICKCHILL_1_URL=sickchill.domain.tld:8081
+      - VRKN_SICKCHILL_1_APIKEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      - VRKN_SICKCHILL_1_SSL=false
+      - VRKN_SICKCHILL_1_VERIFY_SSL=false
+      - VRKN_SICKCHILL_1_GET_MISSING=true
+  volumes:
+   - /configs/varken/configs:/config
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: varken
+  image: boerderij/varken:latest
+  
+ openspeedtest:
+  container_name: speedtest
+  environment:
+   - MODE=standalone
+   - TITLE=MySpeedtester
+   - TELEMETRY=True
+   - PASSWORD=xxxxxxxxxxxxxxxxxxxxxxx
+   - EMAIL=xxxxxxxxxxxxxxxxxx
+   - IPINFO_APIKEY=xxxxxxxxxxxxxxxxx
+  network_mode: mynetwork
+  hostname: speedtest
+  restart: unless-stopped
+  image: adolfintel/speedtest:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.speedtest.rule=Host(`speedtest.alexhayward.me`)"
+    - "traefik.http.routers.speedtest.tls=true"
+    - "traefik.http.routers.speedtest.entrypoints=websecure"
+    - "traefik.http.services.speedtest.loadbalancer.server.port=80"
+  
+ youtubedl:
+  container_name: youtubedl
+  environment:
+   - ALLOW_CONFIG_MUTATIONS=true
+  volumes:
+   - /data/youtube/download:/app/appdata
+   - /data/youtube/download/audio:/app/audio
+   - /data/youtube/download/video:/app/video
+   - /data/youtube/download/subscriptions:/app/subscriptions
+   - /data/youtube/download/users:/app/users
+  restart: unless-stopped
+  network_mode: mynetwork
+  hostname: youtubedl
+  image: tzahi12345/youtubedl-material:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.youtubedl.rule=Host(`youtubedl.alexhayward.me`)"
+    - "traefik.http.routers.youtubedl.tls=true"
+    - "traefik.http.routers.youtubedl.entrypoints=websecure"
+    - "traefik.http.services.youtubedl.loadbalancer.server.port=17442"
+ 
+#  minecraft:
+#   container_name: minecraft
+#   restart: unless-stopped
+#   ports:
+#    - "25565:25565"
+#    - "28016:28016"
+#   volumes:
+#    - "/configs/minecraft:/data"
+#   environment:
+#    - EULA=TRUE
+#    - ENABLE_RCON=true
+#    - RCON_PASSWORD=xxxxxxxxxxxxxxxxxxxxxxxxxxx
+#    - RCON_PORT=28016
+#    - SERVER_NAME=xxxxxxxxxxxxxxxxxxxxxxxx
+#    - WHITELIST=SurelyExploding,RacistAnimeLover,Dishcleaner,Ducksonspeed
+#    - OPS=SurelyExploding,RacistAnimeLover,Dishcleaner,Ducksonspeed
+#    - ICON=http://www.pngall.com/wp-content/uploads/2016/06/Canada-Flag-Free-Download-PNG.png
+#    - ENABLE_QUERY=true
+#    - MAX_PLAYERS=10
+#    - SPAWN_PROTECTION=0
+#    - UID=xxxx
+#    - GID=xxxx
+#    - MEMORY=2G
+#    - MOTD="Cool Guys""  
+#   network_mode: mynetwork
+#   hostname: minecraft
+#   image: itzg/minecraft-server
+
+#  listarr:
+#   container_name: listarr
+#   environment:
+#    - UMASK_SET=022
+#   volumes:
+#    - '/listarr:/server/config/'
+# # ports:
+# #  - '8989:8989'
+#   depends_on:
+#    - "letsencrypt"
+#   network_mode: mynetwork
+#   hostname: listarr
+#   restart: unless-stopped
+#   image: ccatt601/listarr
+
+
+#  rdesktop:
+#   container_name: rdesktop
+#   environment:
+#    - PUID=
+#    - PGID=
+#    - TZ=Europe/London
+#    - UMASK=022
+#   volumes:
+#    - '/var/run/docker.sock:/var/run/docker.sock'
+#    - '/configs/rdesktop:/config'
+#   network_mode: mynetwork
+#   hostname: desktop
+#   shm_size: "1gb"
+#   tty: true
+#   restart: unless-stopped
+#   image: linuxserver/rdesktop
+#   labels:
+#    - "traefik.enable=true"
+#    - "traefik.http.routers.desktop.rule=Host(`desktop.alexhayward.me`)"
+#    - "traefik.http.routers.desktop.tls=true"
+#    - "traefik.http.routers.desktop.entrypoints=websecure"
+#    - "traefik.http.services.desktop.loadbalancer.server.port=3389"
+
+  
+
+
+volumes:
+ OPENVPN:
+  external: true
+# ipa:
+  #external: true
+ GRAFANA-STORAGE:
+  external: false
+
+
+
+
+
+

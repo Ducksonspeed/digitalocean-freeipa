@@ -1,0 +1,114 @@
+version: '3.3'
+
+services:    
+ traefik: 
+  container_name: 'traefik' 
+  image: traefik:2.2
+  restart: always 
+  networks:
+    - traefik-public
+    - traefik-private
+  security_opt: 
+   - no-new-privileges:true 
+  secrets: 
+   - digital_ocean_account  
+  environment: 
+   - DO_AUTH_TOKEN_FILE=/run/secrets/digital_ocean_account
+  command: 
+   - '--log.level=DEBUG' 
+   - '--entrypoints.web.address=:80' 
+   - '--entrypoints.websecure.address=:443'
+   - '--providers.docker=true' 
+   - '--api.insecure=false' 
+   - '--api.dashboard=true'  
+   - '--providers.docker.exposedbydefault=false'
+   - '--providers.docker.network=mynetwork'
+   - '--certificatesresolvers.do.acme.email=alex@alexhayward.me' 
+   - '--certificatesresolvers.le.acme.tlschallenge=true' 
+   - '--certificatesresolvers.do.acme.storage=/acme.json'
+  ports: 
+   - "80:80" 
+   - "443:443" 
+  volumes: 
+   - '/var/run/docker.sock:/var/run/docker.sock:ro' 
+   - '/home/alex/traefik/letsencrypt/acme.json:/acme.json' 
+
+# global redirect to https 
+  labels: 
+   - 'traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)' 
+   - 'traefik.http.routers.http-catchall.entrypoints=web' 
+   - 'traefik.http.routers.http-catchall.middlewares=redirect-to-https' 
+   - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+
+  # dashboard
+   - 'traefik.enable=true' 
+   - 'traefik.http.routers.traefik.rule=Host(`monitor.${new_hostname}`)'
+   - 'traefik.http.routers.traefik.tls=true'
+   - "traefik.http.routers.traefik.tls.certresolver=le"
+   - 'traefik.http.routers.traefik.entrypoints=websecure'
+   - 'traefik.http.routers.traefik.service=api@internal'
+
+
+ portainer:
+  container_name: portainer
+  restart: unless-stopped
+  volumes:
+   - '/var/run/docker.sock:/var/run/docker.sock'
+   - '/home/alex/configs/portainer:/data'
+  network_mode: traefik-private
+  hostname: portainer
+  image: portainer/portainer:latest
+  labels:
+   - "traefik.enable=true"
+   - "traefik.http.routers.portainer.rule=Host(`admin.${new_hostname}`)"
+   - "traefik.http.routers.portainer.tls=true"
+   - "traefik.http.routers.portainer.tls.certresolver=le"
+   - "traefik.http.routers.portainer.entrypoints=websecure"
+   - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+ netdata:
+  container_name: netdata
+  network_mode: traefik-private
+  hostname: netdata
+  cap_add:
+   - SYS_PTRACE
+  security_opt:
+   - apparmor:unconfined
+  volumes:
+   - /proc:/host/proc:ro
+   - /sys:/host/sys:ro
+   - /var/run/docker.sock:/var/run/docker.sock:ro
+  restart: unless-stopped
+  image: netdata/netdata
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.netdata.rule=Host(`netdata.${new_hostname}`)"
+    - "traefik.http.routers.netdata.tls=true"
+    - "traefik.http.routers.netdata.tls.certresolver=le"
+    - "traefik.http.routers.netdata.entrypoints=websecure"
+    - "traefik.http.services.netdata.loadbalancer.server.port=19999"
+
+
+ openspeedtest:
+  container_name: speedtest
+  environment:
+   - MODE=standalone
+   - TITLE=SpeedTest
+  network_mode: traefik-private
+  hostname: speedtest
+  restart: unless-stopped
+  image: adolfintel/speedtest:latest
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.speedtest.rule=Host(`speedtest.${new_hostname}`)"
+    - "traefik.http.routers.speedtest.tls=true"
+    - "traefik.http.routers.speedtest.tls.certresolver=le"
+    - "traefik.http.routers.speedtest.entrypoints=websecure"
+    - "traefik.http.services.speedtest.loadbalancer.server.port=80"
+
+
+networks:
+  traefik-public:
+    external: true
+  traefik-private:
+    external: false
