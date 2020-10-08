@@ -1,0 +1,19 @@
+---
+- name: Render docker-compose config
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ portainer_dir }}/docker-compose.yml"
+    owner: "{{ user }}"
+  notify: start portainer
+
+- name: Create traefik docker network
+  docker_network:
+    name: traefik
+    state: present
+
+- name: Pull Docker image
+  docker_image:
+    name: portainer/portainer
+    source: pull
+    tag: "latest"
+  notify: start portainer

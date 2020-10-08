@@ -1,0 +1,16 @@
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: wheel
+  with_items:
+    - "{{ freeipa_compose }}"
+
+- name: Disabled systemd-resolved to prevent port 53 bind error
+  systemd:
+    name: systemd-resolved
+    state: stopped 
+    masked: yes
+    enabled: no
+    daemon_reload: yes

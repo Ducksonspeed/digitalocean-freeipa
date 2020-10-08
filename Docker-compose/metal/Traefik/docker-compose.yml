@@ -24,7 +24,7 @@ services:
    - '--api.insecure=false' 
    - '--api.dashboard=true'  
    - '--providers.docker.exposedbydefault=false'
-   - '--providers.docker.network=mynetwork'
+   - '--providers.docker.network=traefik-public'
    - '--certificatesresolvers.google.acme.email=alex@alexhayward.me' 
    - '--certificatesresolvers.google.acme.dnschallenge=true' 
    - '--certificatesresolvers.google.acme.dnschallenge.provider=gcloud'  

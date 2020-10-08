@@ -1,0 +1,8 @@
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: wheel
+  with_items:
+    - "{{ portainer_dir }}"

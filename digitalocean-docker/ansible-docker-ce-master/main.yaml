@@ -1,0 +1,10 @@
+- hosts: all
+  gather_facts: yes
+  become: yes
+  vars_files:
+    - ../ansible-docker-ce-master/defaults/main.yml
+  roles:
+    - { role: system}
+    - { role: setup-user}
+    - { role: docker}
+    - { role: traefik}

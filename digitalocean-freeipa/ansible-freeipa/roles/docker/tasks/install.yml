@@ -1,0 +1,10 @@
+- name: Add Docker APT GPG key
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+
+- name: Install docker engine ce 
+  yum:
+    update_cache: yes
+    name: docker-ce
+    state: latest

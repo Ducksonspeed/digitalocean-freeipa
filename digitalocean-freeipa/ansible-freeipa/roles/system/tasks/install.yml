@@ -1,0 +1,33 @@
+- name: Update 
+  dnf:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Install packages
+  dnf:
+    name: "{{packages}}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+        - epel-release
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+        - nano
+        - python3-pip
+        - ca-certificates
+        - curl
+        - git
+
+
+- name: Install docker SDK & Docker-compose
+  pip:
+    name:
+      - docker
+      - docker-compose
+    umask: "0022"
+    executable: pip3
+
+    

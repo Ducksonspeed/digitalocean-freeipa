@@ -1,0 +1,11 @@
+---
+- name: start freeipa
+  docker_compose:
+    state: present
+    project_src: "{{ freeipa_compose }}"
+
+- name: restart freeipa
+  docker_compose:
+    state: present
+    project_src: "{{ freeipa_compose }}"
+    restarted: yes

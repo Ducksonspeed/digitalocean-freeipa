@@ -1,17 +1,17 @@
-version: '3.3'
+version: '2'
 
 secrets:
   digital_ocean_account:
    file: "secrets/credentials.env"
 
+   
 services:    
  traefik: 
   container_name: 'traefik' 
   image: traefik:2.2
   restart: always 
   networks:
-    - traefik-public
-    - traefik-private
+    - traefik
   security_opt: 
    - no-new-privileges:true 
   secrets: 
@@ -26,11 +26,11 @@ services:
    - '--api.insecure=false' 
    - '--api.dashboard=true'  
    - '--providers.docker.exposedbydefault=false'
-   - '--providers.docker.network=mynetwork'
-   - '--certificatesresolvers.do.acme.email=alex@alexhayward.me' 
-   - '--certificatesresolvers.do.acme.dnschallenge=true' 
-   - '--certificatesresolvers.do.acme.dnschallenge.provider=digitalocean'  
-   - '--certificatesresolvers.do.acme.storage=/acme.json'
+   - '--providers.docker.network=traefik'
+   - '--certificatesresolvers.default.acme.email=alex@alexhayward.me' 
+   - '--certificatesresolvers.default.acme.dnschallenge=true' 
+   - '--certificatesresolvers.default.acme.dnschallenge.provider=digitalocean'  
+   - '--certificatesresolvers.default.acme.storage=/acme.json'
   ports: 
    - "80:80" 
    - "443:443" 
@@ -46,7 +46,7 @@ services:
    - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
 
   # global wildcard certificates
-   - 'traefik.http.routers.wildcard-certs.tls.certresolver=do'
+   - 'traefik.http.routers.wildcard-certs.tls.certresolver=default'
    - 'traefik.http.routers.wildcard-certs.tls.domains[0].main=${new_hostname}'
    - 'traefik.http.routers.wildcard-certs.tls.domains[0].sans=*.${new_hostname}'
    - 'traefik.http.routers.wildcard-certs.tls.domains[1].main=${new_hostname}'
@@ -66,7 +66,7 @@ services:
   volumes:
    - '/var/run/docker.sock:/var/run/docker.sock'
    - '/home/alex/configs/portainer:/data'
-  network_mode: traefik-private
+  network_mode: traefik
   hostname: portainer
   image: portainer/portainer:latest
   labels:
@@ -78,7 +78,7 @@ services:
 
  netdata:
   container_name: netdata
-  network_mode: traefik-private
+  network_mode: traefik
   hostname: netdata
   cap_add:
    - SYS_PTRACE
@@ -103,7 +103,7 @@ services:
   environment:
    - MODE=standalone
    - TITLE=SpeedTest
-  network_mode: traefik-private
+  network_mode: traefik
   hostname: speedtest
   restart: unless-stopped
   image: adolfintel/speedtest:latest
@@ -114,9 +114,59 @@ services:
     - "traefik.http.routers.speedtest.entrypoints=websecure"
     - "traefik.http.services.speedtest.loadbalancer.server.port=80"
 
+ ipa:
+  image: adelton/freeipa-server:centos-7
+  restart: unless-stopped
+  container_name: freeipa
+  network_mode: traefik
+  hostname: ipa
+  environment:
+    - IPA_SERVER_HOSTNAME=${new_hostname}
+    - IPA_SERVER_IP=${server_ip}
+  tty: true
+  stdin_open: true
+  cap_add:
+    - SYS_ADMIN
+  volumes:
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    - /var/lib/ipa-data:/data
+  sysctls:
+    - net.ipv6.conf.lo.disable_ipv6=0
+    - net.ipv6.conf.all.disable_ipv6=0
+  security_opt:
+    - "seccomp:unconfined"
+  command:
+    - -U 
+    - --domain=${new_hostname}
+    - --realm=IPA.ALEXHAYWARD.ME
+    - --http-pin=test1234
+    - --dirsrv-pin=test1234
+    - --ds-password=test1234
+    - --admin-password=test1234
+    - --unattended
+  ports:
+    - "53:53/udp"
+    - "53:53"
+    - "389:389"
+    - "636:636"
+    - "88:88"
+    - "464:464"
+    - "88:88/udp"
+    - "464:464/udp"
+    - "123:123/udp"
+    - "7389:7389"
+    - "9443:9443"
+    - "9444:9444"
+    - "9445:9445"
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.ipa.rule=Host(`${new_hostname}`)"
+    - "traefik.http.routers.ipa.tls=true"
+    - "traefik.http.routers.ipa.entrypoints=websecure"
+    - "traefik.http.services.ipa.loadbalancer.server.port=443"
+
+
 
 networks:
-  traefik-public:
+  traefik:
     external: true
-  traefik-private:
-    external: false

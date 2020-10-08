@@ -1,0 +1,19 @@
+---
+- name: Render docker-compose config
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ freeipa_compose }}/docker-compose.yml"
+    owner: "{{ user }}"
+  notify: start freeipa
+
+- name: Create traefik docker network
+  docker_network:
+    name: traefik
+    state: present
+
+- name: Pull Docker image
+  docker_image:
+    name: freeipa/freeipa-server
+    source: pull
+    tag: "centos-7"
+  notify: start freeipa

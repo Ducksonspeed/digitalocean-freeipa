@@ -7,7 +7,7 @@ def lambda_handler(json_input, context):
     json_dump = json.dumps(json_input)
     request = json.loads(json_dump)
     message = request["message"]
-    numbers = ["xxxxxxx"] # Change this to your number
+    numbers = ["+447591895026"] 
     for number in numbers:
         response = CLIENT.publish(
             PhoneNumber=number,
@@ -16,7 +16,7 @@ def lambda_handler(json_input, context):
                 'AWS.SNS.SMS.SenderID':
                 {
                     'DataType': 'String',
-                    'StringValue': 'RTX-3080'
+                    'StringValue': 'Grafana'
                 }
             }
         )

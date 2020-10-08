@@ -1,0 +1,35 @@
+---
+# systemd
+user: ubuntu
+copy_local_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/leaseweb.pub') }}"
+
+# Install
+traefik_version: "2.2"
+traefik_directory: "/home/ubuntu/traefik"
+
+# General settings
+traefik_domain: "dev.alexhayward.me"
+traefik_log_level: "WARNING"
+traefik_accesslog_enable: false
+
+# Main configuration
+traefik_global_https_redirect: true
+traefik_port_http: 80
+traefik_port_https: 443
+
+# Dashboard
+traefik_dashboard_enable: true
+traefik_dashboard_subdomain: "test"
+traefik_dashboard_basicauth_enable: false
+traefik_dashboard_basicauth_users: []
+
+# Docker
+traefik_docker_network: "traefik"
+DNS: digitalocean
+SecretFile: "credentials.env"
+SecretLocation: "../secrets/credentials.env"
+
+# Enable automatic certificates from Let's Encrypt
+traefik_acme_enable: true
+traefik_acme_email: "admin@alexhayward.me"
+
