@@ -144,7 +144,7 @@ services:
     - "traefik.http.routers.delugefilm.entrypoints=websecure"
     - "traefik.http.services.delugefilm.loadbalancer.server.port=8081"
     - "traefik.http.routers.delugefilm.middlewares=auth"
-    - "traefik.http.middlewares.auth.basicauth.users=dishcleaner:$$apr1$$wUdPcM77$$qvBsxsnm7wpbXbMT3zgy7/"
+    - "traefik.http.middlewares.auth.basicauth.users=xxxxxxx/"
 
  delugeTV:
   container_name: delugeTV
