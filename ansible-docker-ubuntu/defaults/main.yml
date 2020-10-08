@@ -1,14 +1,14 @@
 ---
 # systemd
-user: "ubuntu"
-copy_local_key: "~/.ssh/leaseweb.pub"
+user: ubuntu
+copy_local_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/leaseweb.pub') }}"
 
 # Install
 traefik_version: "2.2"
 traefik_directory: "/home/ubuntu/traefik"
 
 # General settings
-traefik_domain: "alexhayward.me"
+traefik_domain: "dev.alexhayward.me"
 traefik_log_level: "WARNING"
 traefik_accesslog_enable: false
 
@@ -25,9 +25,9 @@ traefik_dashboard_basicauth_users: []
 
 # Docker
 traefik_docker_network: "traefik"
-DNS-ACME: "digitalocean"
+DNS: digitalocean
 SecretFile: "credentials.env"
-SecretLocation:  
+SecretLocation: "../secrets/credentials.env"
 
 # Enable automatic certificates from Let's Encrypt
 traefik_acme_enable: true

@@ -3,6 +3,7 @@
   template:
     src: docker-compose.yml.j2
     dest: "{{ traefik_directory }}/docker-compose.yml"
+    owner: "{{ user }}"
   notify: start traefik
 
 - name: Check that acme.json exists
@@ -16,6 +17,7 @@
     path: "{{ traefik_directory }}/acme.json"
     state: touch
     mode: 0600
+    owner: "{{ user }}"
   when: acme.stat.exists == False
 
 - name: Create traefik docker network

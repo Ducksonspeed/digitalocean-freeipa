@@ -1,12 +1,3 @@
-- name: Check that the required groups exist
-  getent:
-    database: group
-    key: "{{ item }}"
-  loop: 
-    - docker
-    - wheel
-  register: group
-
 - name: Make sure we have the required groups
   group:
     name: "{{ item }}"
@@ -14,7 +5,6 @@
   loop: 
     - docker
     - wheel
-  when: group.getent.exists == False
 
 - name: Allow 'wheel' group to have passwordless sudo
   lineinfile:
@@ -24,12 +14,6 @@
     line: '%wheel ALL=(ALL) NOPASSWD: ALL'
     validate: '/usr/sbin/visudo -cf %s'
 
-- name: check if {{ user }} exists
-  getent: 
-    database: passwd
-    key: "{{ user }}"
-    register: users
-
 - name: Create {{ user }}
   user: 
     name: "{{ user }}"
@@ -38,7 +22,6 @@
     append: true
     create_home: true
     shell: /bin/bash 
-  when: user.getent.exists == False
 
 - name: Set authorized key for remote user '{{ user }}'
   authorized_key:
@@ -57,11 +40,13 @@
   file:
     path: "{{ item }}"
     state: directory
+    owner: "{{ user }}"
+    group: wheel
   with_items:
     - "{{ traefik_directory }}"
 
 - name: Copy DNS service account
-  cpoy:
+  copy:
     src: "{{ SecretLocation }}"
     dest: "{{ traefik_directory }}/credentials.env"
     owner: "{{ user }}"

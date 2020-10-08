@@ -1,0 +1,67 @@
+# {{ ansible_managed }}
+version: '2'
+
+secrets: 
+ {{ DNS }}:
+  file: "{{ traefik_directory }}/{{ SecretFile }}"
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:{{ traefik_version }}
+    restart: always
+    ports:
+      - {{ traefik_port_http }}:80
+      - {{ traefik_port_https }}:443
+    networks:
+      - {{ traefik_docker_network }}
+    secrets: 
+      - {{ DNS }}
+    environment: 
+      - DO_AUTH_TOKEN_FILE=/run/secrets/{{ DNS }}
+    command:
+      - '--log.level={{ traefik_log_level }}'
+      - '--entrypoints.http.address=:80'
+      - '--entrypoints.https.address=:443'
+      - '--providers.docker=true' 
+      - '--api.insecure=false' 
+      - '--api.dashboard=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.network={{ traefik_docker_network }}'
+      - '--certificatesresolvers.default.acme.email={{  traefik_acme_email }}' 
+      - '--certificatesresolvers.default.acme.dnschallenge=true' 
+      - '--certificatesresolvers.default.acme.dnschallenge.provider={{ DNS }}'  
+      - '--certificatesresolvers.default.acme.storage=/acme.json'  
+    labels: 
+{% if traefik_dashboard_basicauth_enable %}
+      - 'traefik.http.routers.dashboard.middlewares=dashboardAuth'
+      - 'traefik.http.middlewares.dashboardAuth.basicauth.users={% for htpasswd in traefik_dashboard_basicauth_users %}{{ htpasswd }}{{ "," if not loop.last else "" }}{% endfor %}'
+{% endif %}
+{% if traefik_global_https_redirect %}
+      - 'traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)' 
+      - 'traefik.http.routers.http-catchall.entrypoints=web' 
+      - 'traefik.http.routers.http-catchall.middlewares=redirect-to-https' 
+      - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+{% endif %}
+      - 'traefik.http.routers.wildcard-certs.tls.certresolver=default'
+      - 'traefik.http.routers.wildcard-certs.tls.domains[0].main={{ traefik_domain }}'
+      - 'traefik.http.routers.wildcard-certs.tls.domains[0].sans=*.{{ traefik_domain }}'
+      - 'traefik.http.routers.wildcard-certs.tls.domains[1].main={{ traefik_domain }}'
+      - 'traefik.http.routers.wildcard-certs.tls.domains[1].sans=*.{{ traefik_domain }}'
+{% if traefik_dashboard_enable %}
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.traefik.rule=Host(`{{ traefik_dashboard_subdomain }}.{{ traefik_domain }}`)'
+      - 'traefik.http.routers.traefik.tls=true'
+      - 'traefik.http.routers.traefik.entrypoints=websecure'
+      - 'traefik.http.routers.traefik.service=api@internal'
+{% endif %}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+{% if traefik_acme_enable %}
+      - "{{ traefik_directory }}/acme.json:/acme.json"
+{% endif %}
+    
+
+networks:
+  {{ traefik_docker_network }}:
+    external: true
