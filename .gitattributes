@@ -2,3 +2,4 @@
 *.tf linguist-vendored=false
 *.py linguist-vendored=false
 *.sh linguist-vendored=false
+*.go linguist-vendored=false
