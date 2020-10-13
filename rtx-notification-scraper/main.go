@@ -1,14 +1,10 @@
 package main
 
 import (
-	"fmt"
-	// "io"
-	"time"
-	// "os"
-	"log"
-	"net/http"
+    "fmt"
+    "os"
 
-	"github.com/PuerkitoBio/goquery"
+	"github.com/anaskhan96/soup"
 	// "github.com/aws/aws-sdk-go/aws"
     // "github.com/aws/aws-sdk-go/aws/session"
     // "github.com/aws/aws-sdk-go/service/sns"
@@ -18,37 +14,16 @@ import (
 
 func main() {
 
-    // Create HTTP client with timeout
-    client := &http.Client{
-        Timeout: 30 * time.Second,
-    }
-
-    // Create and modify HTTP request before sending
-    request, err := http.NewRequest("GET", "https://www.nvidia.com/en-gb/shop/geforce/gpu/?page=1&limit=9&locale=en-gb&category=GPU", nil)
+    resp, err := soup.Get("https://www.nvidia.com/en-gb/shop/geforce/?page=1&limit=9&locale=en-gb")
     if err != nil {
-        log.Fatal(err)
-    }
-    request.Header.Set("User-Agent", "something else")
-
-    // Make request
-    response, err := client.Do(request)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer response.Body.Close()
-
-    // Create a goquery document from the HTTP response
-    document, err := goquery.NewDocumentFromReader(response.Body)
-    if err != nil {
-        log.Fatal("Error loading HTTP response body. ", err)
+        os.Exit(1)
     }
 
-
-	// Find and print image URLs
-    document.Find("class").Each(func(index int, element *goquery.Selection) {
-		divid, exists := element.Attr($(".featured-buy-link").parent)
-        if exists {
-            fmt.Println(divid)
-        }
-    })
-}
+    doc := soup.HTMLParse(resp)
+    grid := doc.FindStrict("div", "class", "featured-container-x1 buy")
+    conditions := grid.Find("div", "class", "buy")
+    primaryCondition := conditions.Find("div")
+    secondaryCondition := primaryCondition.FindNextElementSibling()
+    links := secondaryCondition.Find("div", "class", "buy").Find("div").Text()
+    fmt.Println("Text : " + links)    
+	}
