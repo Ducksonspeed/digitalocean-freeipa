@@ -36,7 +36,7 @@ resource "null_resource" "ansible-provision" {
 
 
   provisioner "local-exec" {
-    command = "ansible-playbook /ansible-freeipa/main.yml -i inventory -vv"
+    command = "ansible-playbook ansible-freeipa/main.yml -i inventory -vv"
   }
 }
 

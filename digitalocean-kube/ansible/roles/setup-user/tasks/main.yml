@@ -1,0 +1,58 @@
+- name: Make sure we have the required groups
+  group:
+    name: "{{ item }}"
+    state: present
+  loop: 
+    - docker
+    - wheel
+
+- name: Allow 'wheel' group to have passwordless sudo
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Create {{ user }}
+  user: 
+    name: "{{ user }}"
+    state: present
+    groups: [docker, wheel]
+    append: true
+    create_home: true
+    shell: /bin/bash 
+
+- name: Set authorized key for remote user '{{ user }}'
+  authorized_key:
+    user: "{{ user }}"
+    state: present
+    key: "{{ copy_local_key }}"
+
+- name: Disable password authentication for root
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin prohibit-password'
+
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: wheel
+  with_items:
+    - "{{ traefik_directory }}"
+
+- name: Copy DNS service account
+  copy:
+    src: "{{ SecretLocation }}"
+    dest: "{{ traefik_directory }}/credentials.env"
+    owner: "{{ user }}"
+    group: wheel
+    mode: '0644'
+ 
+
+    
+

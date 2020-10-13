@@ -1,0 +1,17 @@
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: wheel
+  with_items:
+    - "{{ traefik_directory }}"
+
+- name: Copy DNS service account
+  copy:
+    src: "{{ SecretLocation }}"
+    dest: "{{ traefik_directory }}/credentials.env"
+    owner: "{{ user }}"
+    group: wheel
+    mode: '0644'
+ 

@@ -1,0 +1,10 @@
+- hosts: all
+  gather_facts: yes
+  become: yes
+  vars_files:
+    - ../ansible/defaults/main.yml
+  roles:
+    - { role: system}
+    - { role: setup-user}
+    - { role: docker}
+    - { role: kube}

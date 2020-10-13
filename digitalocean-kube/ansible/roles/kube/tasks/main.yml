@@ -1,0 +1,7 @@
+---
+    - include: kube-install.yml
+    
+    - include: master.yml
+
+    - include: workers.yml
+    
