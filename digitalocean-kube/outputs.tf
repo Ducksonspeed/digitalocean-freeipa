@@ -11,7 +11,7 @@ resource "local_file" "ansible_inv_preconfig" {
   worker-ip = digitalocean_droplet.kubework.*.ipv4_address
   }
   )
-  filename = "./Kubeadm-ansible/hosts.ini"
+  filename = "./Kube/hosts.ini"
 }
 
 
@@ -22,6 +22,6 @@ resource "local_file" "vars-all" {
   master-ip = [digitalocean_droplet.kubema.*.ipv4_address]
   }
   )
-  filename = "./kubeadm-ansible/group_vars/all.yml"
+  filename = "./kube/group_vars/all.yml"
 }
 
