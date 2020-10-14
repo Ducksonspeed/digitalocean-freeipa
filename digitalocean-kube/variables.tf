@@ -40,3 +40,7 @@ variable "instance_count_m" {
 variable "app_name" {
     default = null
 }
+
+ variable "usertosetup" {
+     default = null
+ }

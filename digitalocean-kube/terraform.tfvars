@@ -6,7 +6,11 @@ domain_name = "kube.alexhayward.me"
 username = "root"
 credentials = "secrets/credentials.env"
 app_name = "dev"
-instance_count_w = 1
+instance_count_w = 2
 instance_count_m = 1
 instance_master = "s-2vcpu-2gb"
 instance_worker = "s-2vcpu-2gb"
+
+
+## System
+usertosetup = "ubuntu"

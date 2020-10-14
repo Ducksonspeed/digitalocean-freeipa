@@ -3,7 +3,7 @@ output "instance_ip" {
 }
 
 resource "local_file" "ansible_inv_preconfig" {
-  content = templatefile("inventory.tmpl",
+  content = templatefile("templates/hosts.tmpl",
   {
   master-name = digitalocean_droplet.kubema.*.name,
   master-ip = digitalocean_droplet.kubema.*.ipv4_address,
@@ -11,8 +11,17 @@ resource "local_file" "ansible_inv_preconfig" {
   worker-ip = digitalocean_droplet.kubework.*.ipv4_address
   }
   )
-  filename = "inventory"
+  filename = "./Kubeadm-ansible/hosts.ini"
 }
 
 
+resource "local_file" "vars-all" {
+  content = templatefile("templates/vars.tmpl",
+  {
+  username = "${var.usertosetup}"
+  master-ip = [digitalocean_droplet.kubema.*.ipv4_address]
+  }
+  )
+  filename = "./kubeadm-ansible/group_vars/all.yml"
+}
 
