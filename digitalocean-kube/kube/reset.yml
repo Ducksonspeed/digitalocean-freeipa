@@ -1,0 +1,7 @@
+- hosts: kube-cluster
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Reset Kubernetes component
+      shell: "kubeadm reset --force"
+      ignore_errors: True

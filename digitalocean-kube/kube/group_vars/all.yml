@@ -1,0 +1,9 @@
+---
+# systemd
+user: "ubuntu"
+copy_local_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/leaseweb.pub') }}"
+
+
+# K8s
+K8S_API_SERCURE_PORT: 6443
+K8S_MASTER_NODE_IP: 161.35.163.154
