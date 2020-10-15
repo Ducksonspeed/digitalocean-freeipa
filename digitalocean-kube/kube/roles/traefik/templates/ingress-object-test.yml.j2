@@ -1,0 +1,15 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: myingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
+spec:
+  rules:
+  - host: master-0.kube.alexhayward.me
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: whoami
+          servicePort: 80

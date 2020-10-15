@@ -1,0 +1,4 @@
+---
+metallb_manifest_yaml_url: "https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml"
+metallb_namespace_yaml_url: "https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml"
+metallb_address_space: 192.168.86.220-192.168.86.239

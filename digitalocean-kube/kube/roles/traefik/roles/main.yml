@@ -1,0 +1,33 @@
+- name: "Create tmp directory"
+  file:
+    path: "{{ tmp_dir }}"
+    state: directory
+    mode: 0755
+  tags: traefik
+
+- name: "Create Traefik manifest"
+  template:
+    src: traefik-deploy.yml.j2
+    dest: "{{ tmp_dir }}/traefik-deploy.yml"
+  tags: traefik
+
+- name: "Create traefik in kubernetes"
+  shell: "kubectl apply -f {{ tmp_dir }}/traefik-deploy.yml"
+  tags: traefik
+
+- name: "Create whoami manifest"
+  template:
+    src: ingress-objet-test.yml.j2
+    dest: "{{ tmp_dir }}/ingress-objet-test.yml"
+  tags: traefik
+
+- name: "Create whoami in kubernetes"
+  shell: "kubectl apply -f {{ tmp_dir }}/traefik-deploy.yml"
+  tags: traefik
+
+- name: "Clean-up"
+  file:
+    path: "{{ tmp_dir }}"
+    state: absent
+  ignore_errors: yes
+  tags: traefik

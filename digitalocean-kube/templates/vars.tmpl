@@ -9,3 +9,5 @@ K8S_API_SERCURE_PORT: 6443
 %{ for index, master-ip in master-ip ~}
 K8S_MASTER_NODE_IP: ${master-ip[index]}
 %{ endfor ~}
+
+tmp_dir: "/home/{{ user }}/tmp"

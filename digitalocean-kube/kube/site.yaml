@@ -19,4 +19,34 @@
   roles:
     - { role: kubernetes/node, tags: node }
 
+# - hosts: master
+#   gather_facts: yes
+#   become: yes
+#   tasks:
+#     - name: "metallb"
+#       include_role: 
+#         name: metallb
+#       run_once: yes
+#       tags: metallb
+
+# - hosts: master
+#   gather_facts: yes
+#   become: yes
+#   tasks:
+#     - name: "Helm"
+#       include_role: 
+#         name: helm
+#       run_once: yes
+#       tags: helm
+
+# - hosts: master
+#   gather_facts: yes
+#   become: yes
+#   tasks:
+#     - name: "traefik"
+#       include_role: 
+#         name: traefik
+#       run_once: yes
+#       tags: traefik
+
 
