@@ -1,0 +1,19 @@
+---
+- name: Render docker-compose config
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ speedtest_dir }}/docker-compose.yml"
+    owner: "{{ user }}"
+  notify: start speedtest
+
+- name: Create traefik docker network
+  docker_network:
+    name: traefik
+    state: present
+
+- name: Pull Docker image
+  docker_image:
+    name: adolfintel/speedtest
+    source: pull
+    tag: "latest"
+  notify: start speedtest

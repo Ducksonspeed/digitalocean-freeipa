@@ -1,0 +1,21 @@
+- name: Enable and check Docker service
+  systemd:
+    name: docker
+    daemon_reload: yes
+    state: started
+    enabled: yes
+
+- name: Enable selinux for containers
+  shell: setsebool -P container_manage_cgroup 1
+
+- name: Enable selinux for containers in docker daemon
+  copy:
+    dest: /etc/docker/daemon.json
+    content: selinux-enabled
+
+- name: Reload daemon
+  systemd:
+    name: docker
+    daemon_reload: yes
+    state: started
+    enabled: yes

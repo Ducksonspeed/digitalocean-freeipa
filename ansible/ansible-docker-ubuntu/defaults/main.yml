@@ -1,35 +1,44 @@
 ---
 # systemd
-user: ubuntu
+user: alex
 copy_local_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/leaseweb.pub') }}"
+config_dir: "/home/{{ user }}/configs"
 
 # Install
 traefik_version: "2.2"
-traefik_directory: "/home/ubuntu/traefik"
+traefik_directory: "{{ config_dir }}/traefik"
 
 # General settings
-traefik_domain: "dev.alexhayward.me"
+domain: "test.alexhayward.me"
 traefik_log_level: "WARNING"
 traefik_accesslog_enable: false
-
-# Main configuration
-traefik_global_https_redirect: true
-traefik_port_http: 80
-traefik_port_https: 443
-
-# Dashboard
-traefik_dashboard_enable: true
-traefik_dashboard_subdomain: "test"
-traefik_dashboard_basicauth_enable: false
-traefik_dashboard_basicauth_users: []
-
-# Docker
-traefik_docker_network: "traefik"
-DNS: digitalocean
-SecretFile: "credentials.env"
-SecretLocation: "../secrets/credentials.env"
 
 # Enable automatic certificates from Let's Encrypt
 traefik_acme_enable: true
 traefik_acme_email: "admin@alexhayward.me"
+traefik_docker_network: "traefik"
+DNS: gcloud
+SecretFile: "credentials.json"
+SecretLocation: "secrets/credentials.json"
+
+
+# Main configuration traefik
+traefik_global_https_redirect: true
+traefik_port_http: 80
+traefik_port_https: 443
+
+# Dashboard traefik
+traefik_dashboard_enable: true
+traefik_dashboard_subdomain: "admin"
+traefik_dashboard_basicauth_enable: false
+traefik_dashboard_basicauth_users: []
+
+# Container Configurations #
+# Portainer #
+portainer_subdomain: "portainer"
+portainer_dir: "{{ config_dir }}/portainer"
+
+# Speedtest
+speedtest_dir: "{{ config_dir }}/speedtest"
+speedtest_subdomain: "speedtest"
 

@@ -1,0 +1,11 @@
+---
+- name: start portainer
+  docker_compose:
+    state: present
+    project_src: "{{ portainer_dir }}"
+
+- name: restart portainer
+  docker_compose:
+    state: present
+    project_src: "{{ portainer_dir }}"
+    restarted: yes

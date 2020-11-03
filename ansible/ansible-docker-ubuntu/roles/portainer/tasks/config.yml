@@ -1,0 +1,7 @@
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+  with_items:
+    - "{{ portainer_dir }}"

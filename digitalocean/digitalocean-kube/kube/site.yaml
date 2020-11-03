@@ -1,0 +1,52 @@
+---
+# - hosts: kube-cluster
+#   gather_facts: yes
+#   become: yes
+#   roles:
+#     - { role: setup-user, tags: account creation}
+#     - { role: system, tags: system update}
+#     - { role: docker, tags: docker }
+
+# - hosts: master
+#   gather_facts: yes
+#   become: yes
+#   roles:
+#     - { role: kubernetes/master, tags: master }
+
+# - hosts: node
+#   gather_facts: yes
+#   become: yes
+#   roles:
+#     - { role: kubernetes/node, tags: node }
+
+- hosts: master
+  gather_facts: yes
+  become: yes
+  tasks:
+    - name: "metallb"
+      include_role: 
+        name: metallb
+      run_once: yes
+      tags: metallb
+
+# - hosts: master
+#   gather_facts: yes
+#   become: yes
+#   tasks:
+#     - name: "Helm"
+#       include_role: 
+#         name: helm
+#       run_once: yes
+#       tags: helm
+
+# - hosts: master
+#   gather_facts: yes
+#   become: yes
+#   tasks:
+#     - name: "traefik"
+#       include_role: 
+#         name: traefik
+#       run_once: yes
+#       tags: traefik
+
+

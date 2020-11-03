@@ -1,0 +1,11 @@
+---
+- name: start speedtest
+  docker_compose:
+    state: present
+    project_src: "{{ speedtest_dir }}"
+
+- name: restart speedtest
+  docker_compose:
+    state: present
+    project_src: "{{ speedtest_dir }}"
+    restarted: yes

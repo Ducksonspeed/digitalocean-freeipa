@@ -1,0 +1,22 @@
+- name: Update 
+  dnf:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Install packages
+  dnf:
+    name: "{{packages}}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+        - epel-release
+        - yum-utils
+        - nano
+        - ca-certificates
+        - curl
+        - git
+
+
+    

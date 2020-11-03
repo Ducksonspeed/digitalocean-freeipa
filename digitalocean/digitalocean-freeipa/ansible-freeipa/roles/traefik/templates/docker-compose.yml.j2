@@ -14,7 +14,7 @@ services:
       - {{ traefik_port_http }}:80
       - {{ traefik_port_https }}:443
     networks:
-      - {{ traefik_docker_network }}
+      - {{ docker_network }}
     secrets: 
       - {{ DNS }}
     environment: 
@@ -27,9 +27,9 @@ services:
       - '--api.insecure=false' 
       - '--api.dashboard=true'
       - '--providers.docker.exposedbydefault=false'
-      - '--providers.docker.network={{ traefik_docker_network }}'
+      - '--providers.docker.network={{ docker_network }}'
       - '--certificatesresolvers.default.acme.email={{  traefik_acme_email }}' 
-      - '--certificatesresolvers.default.acme.dnschallenge=true' 
+      - '--certificatesresolvers.default.acme.dnschallenge=false' 
       - '--certificatesresolvers.default.acme.dnschallenge.provider={{ DNS }}'  
       - '--certificatesresolvers.default.acme.storage=/acme.json'  
     labels: 
@@ -63,5 +63,5 @@ services:
     
 
 networks:
-  {{ traefik_docker_network }}:
+  {{ docker_network }}:
     external: true

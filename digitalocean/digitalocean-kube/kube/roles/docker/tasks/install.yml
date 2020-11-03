@@ -1,0 +1,16 @@
+
+- name: Add Docker APT GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+
+- name: Add Docker APT repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu xenial stable
+    state: present
+    filename: "docker"
+
+- name: Install docker engine ce 
+  apt:
+    update_cache: yes
+    name: docker-ce
+    state: present
